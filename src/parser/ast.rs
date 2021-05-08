@@ -9,16 +9,22 @@ pub enum Statement {
 
 pub type Label = String;
 
-pub struct Instruction {
-    opcode: Opcode,
-    args  : Args,
-}
-
-pub enum Args {
-    None,
-    jmp(Jumpable),
-    regOp(Reg, Op2),
-    regIndex(Reg, Reg, i8, IndexType),
+pub enum Instruction {
+    JMP(jumpable), 
+    JMI(jumpable),
+    JEQ(jumpable),
+    STP,
+    ADD(Reg, Op2),
+    SUB(Reg, Op2),
+    ADC(Reg, Op2),
+    SBC(Reg, Op2),
+    MOV(Reg, Op2),
+    CMP(Reg, Op2),
+    AND(Reg, Op2),
+    TST(Reg, Op2),
+    LDR(Reg, Reg, i8, IndexType),
+    STR(Reg, Reg, i8, IndexType),
+    
 }
 
 pub enum Jumpable {
@@ -52,19 +58,3 @@ pub enum Shift {
     ROR,
 }
 
-pub enum Opcode {
-    JMP, 
-    JMI,
-    JEQ,
-    STP,
-    ADD,
-    SUB,
-    ADC,
-    SBC,
-    MOV,
-    CMP,
-    AND,
-    TST,
-    LDR,
-    STR, 
-}
