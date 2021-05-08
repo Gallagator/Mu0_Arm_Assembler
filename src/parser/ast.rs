@@ -2,17 +2,19 @@ pub struct Ast {
     statments: Vec<Statement>,
 }
 
+pub type Position = (u32, u32); /* Row followed by col */
+
 pub enum Statement {
-    instruction(Instruction),
-    label(Label),
+    Instruction(Instruction),
+    Label(Label),
 }
 
 pub type Label = String;
 
 pub enum Instruction {
-    JMP(jumpable), 
-    JMI(jumpable),
-    JEQ(jumpable),
+    JMP(Jumpable),
+    JMI(Jumpable),
+    JEQ(Jumpable),
     STP,
     ADD(Reg, Op2),
     SUB(Reg, Op2),
@@ -22,26 +24,25 @@ pub enum Instruction {
     CMP(Reg, Op2),
     AND(Reg, Op2),
     TST(Reg, Op2),
-    LDR(Reg, Reg, i8, IndexType),
-    STR(Reg, Reg, i8, IndexType),
-    
+    LDR(Reg, Reg, i8, IndexType, Position),
+    STR(Reg, Reg, i8, IndexType, Position),
 }
 
 pub enum Jumpable {
-    absolute(u16),
-    label(Label),
+    Absolute(u16, Position),
+    Label(Label, Position),
 }
 
 pub enum Op2 {
-    immediate(u8, u8),        // this if for ROR of an immedate value K
-    shifed_reg(Reg, Shift, u8),
+    Immediate(u8, u8, Position), // this if for ROR of an immedate value K
+    ShifedReg(Reg, Shift, u8, Position),
 }
 
 pub enum IndexType {
-   PRE,
-   POST,
-   PRE_WRITE,
-   POST_WRITE,
+    PRE,
+    POST,
+    PREWRITE,
+    POSTWRITE,
 }
 
 pub enum Reg {
@@ -57,4 +58,3 @@ pub enum Shift {
     ASR,
     ROR,
 }
-
