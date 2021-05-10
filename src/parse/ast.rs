@@ -45,6 +45,8 @@ pub enum IndexType {
     POSTWRITE,
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Reg {
     R0,
     R1,
@@ -52,6 +54,8 @@ pub enum Reg {
     R3,
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Shift {
     LSL,
     LSR,
