@@ -1,4 +1,6 @@
 mod parse;
+use std::{fs::File, io::Read};
+
 use parse::ast;
 
 use combine::{position, stream::position};
@@ -19,8 +21,10 @@ const INPUT: &str = ".label1
                      .label43";
 
 fn main() {
-    if let res = parse::parse::program().easy_parse(position::Stream::new(INPUT))
-    {
-        println!("{:?}", res);
-    }
+    let mut file = File::open("test.s").unwrap();
+    let mut input = String::new();
+    file.read_to_string(&mut input);
+
+    let res = parse::parse::program().easy_parse(position::Stream::new(input.as_str()));
+    //print!("{:?}", res);
 }

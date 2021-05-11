@@ -275,7 +275,7 @@ where
         instr().map(|instr| Statement::Instruction(instr)),
         label().map(|lab| Statement::Label(lab)),
             ))).map(|(_, stat)| stat);
-    many::<Vec<_>, _, _>(statement).map(|stats| Ast { statements: stats })
+    many::<Vec<_>, _, _>(attempt(statement)).map(|stats| Ast { statements: stats })
 }
 
 use combine::EasyParser;
