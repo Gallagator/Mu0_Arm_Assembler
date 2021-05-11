@@ -3,16 +3,16 @@
                  | ‘JMI’〈jumpable〉
                  | ‘JEQ’〈jumpable〉
                  | ‘STP’
-                 | ‘ADD’〈reg〉〈op2〉
-                 | ‘SUB’〈reg〉〈op2〉
-                 | ‘ADC’〈reg〉〈op2〉
-                 | ‘SBC’〈reg〉〈op2〉
-                 | ‘MOV’〈reg〉〈op3〉
-                 | ‘CMP'〈reg〉〈op2〉
-                 | ‘AND’〈reg〉〈op2〉
-                 | ‘TST’〈reg〉〈op2〉
-                 | 'LDR'〈reg〉〈index〉
-                 | 'STR'〈reg〉〈index〉
+                 | ‘ADD’〈reg〉','〈op2〉
+                 | ‘SUB’〈reg〉','〈op2〉
+                 | ‘ADC’〈reg〉','〈op2〉
+                 | ‘SBC’〈reg〉','〈op2〉
+                 | ‘MOV’〈reg〉','〈op3〉
+                 | ‘CMP'〈reg〉','〈op2〉
+                 | ‘AND’〈reg〉','〈op2〉
+                 | ‘TST’〈reg〉','〈op2〉
+                 | 'LDR'〈reg〉','〈index〉
+                 | 'STR'〈reg〉','〈index〉
 〈reg〉    ::= 'R0' | 'R1' | 'R2' | 'R3'
 〈op2〉    ::= 〈int_lit〉'ROR' 〈int_lit〉
                |〈reg〉〈shift〉'#'〈int_lit〉
@@ -22,7 +22,7 @@
 〈label〉  ::= '.'〈ident〉
 〈ident〉  ::= (‘_’ | ‘a’-’z’ | ‘A’-’Z’)(‘_’ | ‘a’-’z’ | ‘A’-’Z’ | 0-9)* 
 〈index〉  ::=   '['〈reg〉']'                 
-               | '['〈reg〉',' '#'〈int_lit〉']' 
-               | '['〈reg〉']' ',' '#'〈int_lit〉           //post - writeback
-               | '['〈reg〉',' '#'〈int_lit〉']' '!'        //pre - writeback
+               | '['〈reg〉',' 〈int_lit〉']' 
+               | '['〈reg〉']' ','〈int_lit〉           //post - writeback
+               | '['〈reg〉',' 〈int_lit〉']' '!'        //pre - writeback
 〈jumpable〉::= 〈int_lit〉| 〈label〉

@@ -1,10 +1,12 @@
 mod parse;
 use parse::ast;
 
-use combine::stream::position;
+use combine::{position, stream::position};
 use combine::EasyParser;
+use combine::stream::position::SourcePosition;
+use combine::Parser;
 
 fn main() {
-    //let result = parse::parse::int_lit().easy_parse("-$2432432413");
-    //println!("{:?}", result);
+    let res = parse::parse::op2().easy_parse(position::Stream::new("R0               ROR   $123"));
+    println!("{:?}", res);
 }
