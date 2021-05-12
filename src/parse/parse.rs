@@ -171,7 +171,7 @@ where
     let jmp = (space_tag("JMP"), jumpable()).map(|instr| Instruction::JMP(instr.1));
     let jmi = (space_tag("JMI"), jumpable()).map(|instr| Instruction::JMI(instr.1));
     let jeq = (space_tag("JEQ"), jumpable()).map(|instr| Instruction::JEQ(instr.1));
-    let stp = space_tag::<Input>("STP").map(|instr| Instruction::STP);
+    let stp = space_tag::<Input>("STP").map(|_| Instruction::STP);
 
     let add = (
         space_tag::<Input>("ADD"),
@@ -278,11 +278,10 @@ where
         spaces::<Input>(),
         choice((
             instr().map(|instr| Statement::Instruction(instr)),
-            label().map(|lab| Statement::Label(lab)),
+            label().map(|lab| Statement::Label(lab, (0, 0))),
         )),
-    )
-        .map(|(_, stat)| stat);
-    many::<Vec<_>, _, _>(attempt(statement)).map(|stats| Ast { statements: stats })
+    ).map(|(_, stat)| stat);
+    (many::<Vec<_>, _, _>(attempt(statement)), spaces::<Input>()).map(|(stats, _)| Ast { statements: stats })
 }
 
 #[cfg(test)]

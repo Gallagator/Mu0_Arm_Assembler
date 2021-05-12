@@ -8,7 +8,7 @@ pub type Position = (u32, u32); /* Line followed by col */
 #[derive(Debug, PartialEq)]
 pub enum Statement {
     Instruction(Instruction),
-    Label(Label),
+    Label(Label, Position),
 }
 
 pub type Label = String;

@@ -1,6 +1,15 @@
-use std::collections::HashMap;
+use std::fmt;
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{Read, Write},
+};
+
+use combine::stream::position;
+use combine::EasyParser;
 
 use super::parse::ast::*;
+use super::parse::parse;
 
 const LSL: u16 = 0b00 << 2;
 const LSR: u16 = 0b01 << 2;
@@ -25,8 +34,23 @@ pub struct Encode {
 #[derive(Debug, PartialEq)]
 pub enum SemanticError {
     UNDEFINEDLABEL(Position),
+    REDEFINEDLABEL(Position),
     ODDROR(Position),
     IMMEDIATEOVERSIZE(Position),
+}
+
+impl fmt::Display for SemanticError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let msg = match self {
+            SemanticError::ODDROR(_) => "Immediate ROR'd by an even value.",
+            SemanticError::UNDEFINEDLABEL(_) => "Jump to undefined label.",
+            SemanticError::IMMEDIATEOVERSIZE(_) => {
+                "You have used an immediate value too large for the instruction"
+            }
+            SemanticError::REDEFINEDLABEL(_) => "Label already defined",
+        };
+        write!(f, "Semantic error: {}", msg)
+    }
 }
 
 impl Encode {
@@ -129,8 +153,8 @@ impl Encode {
     }
 
     pub fn instruction(
-        instr: &mut Instruction,
-        label_map: HashMap<&str, u16>,
+        instr: &Instruction,
+        label_map: &HashMap<&str, u16>,
     ) -> Result<u16, SemanticError> {
         let mut encoding = Encode { val: 0 };
         match instr {
@@ -213,7 +237,7 @@ impl Encode {
     fn jumps(
         &mut self,
         jumpable: &Jumpable,
-        label_map: HashMap<&str, u16>,
+        label_map: &HashMap<&str, u16>,
     ) -> Result<(), SemanticError> {
         let position;
         let n = match jumpable {
@@ -290,6 +314,66 @@ impl Encode {
                 IndexType::POSTWRITE => self.set_w(),
             }
             Ok(())
+        }
+    }
+}
+
+fn assemble(Ast { statements: stats }: &Ast) -> Vec<Result<u16, SemanticError>> {
+    let mut assembled: Vec<Result<u16, SemanticError>> = Vec::new();
+    let mut label_map = HashMap::new();
+    let mut index = 0;
+    /* 1st pass to determine the location of labels */
+    for stat in stats.iter() {
+        match stat {
+            Statement::Label(lab, pos) => {
+                let err = Err(SemanticError::REDEFINEDLABEL(pos.clone()));
+                label_map
+                    .insert(&lab[..], index)
+                    .map(|_| assembled.push(err));
+            }
+            _ => {
+                index += 1;
+            }
+        }
+    }
+    /* 2nd pass for the assembling */
+    for stat in stats.iter() {
+        match stat {
+            Statement::Instruction(instr) => assembled.push(Encode::instruction(instr, &label_map)),
+            _ => {}
+        }
+    }
+    assembled
+}
+
+pub fn assemble_to_file(input_filename: &str) {
+    /* Read assembly file */
+    let mut file =
+        File::open(input_filename).expect(&format!("{} file doesn't exist.", input_filename)[..]);
+    let mut assembly = String::new();
+    file.read_to_string(&mut assembly)
+        .expect("Unable to read entire file sorry!");
+    /* parse assembly file */
+    let assembly = position::Stream::new(assembly.as_str());
+    let result = parse::program().easy_parse(assembly);
+    let ast;
+    match result {
+        Ok(parse_output) => ast = parse_output.0,
+        Err(err) => {
+            println!("Parse error :{}", err);
+            return;
+        }
+    }
+    /* Assemble the file */
+    let instrs = assemble(&ast);
+    let mut out = File::create("out.txt").expect("I couldn't create out.txt. Maybe you should?");
+    for instr in instrs.iter() {
+        match instr {
+            Ok(encoding) => {
+                out.write_all(format!("{:#06x}\n", encoding).as_bytes())
+                    .expect("Couldn't write to the output file.");
+            }
+            Err(sem_err) => println!("{}", sem_err),
         }
     }
 }

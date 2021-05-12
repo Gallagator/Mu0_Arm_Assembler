@@ -42,7 +42,7 @@ fn test_assemble(instruction: &str, encoding: u16, err: &Option<SemanticError>) 
         .unwrap()
         .0;
     if let Statement::Instruction(instr) = &mut prog.statements[0] {
-        match Encode::instruction(instr, HashMap::new()) {
+        match Encode::instruction(instr, &HashMap::new()) {
             Ok(instr) => assert_eq!(instr, encoding),
             Err(e) => assert_eq!(&Some(e), err),
         }
