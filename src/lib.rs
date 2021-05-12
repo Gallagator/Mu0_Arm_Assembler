@@ -20,7 +20,7 @@ mod tests {
             (
                 "JEQ $4096",
                 0,
-                Some(SemanticError::IMMEDIATEOVERSIZE((0, 0))),
+                Some(SemanticError::IMMEDIATEOVERSIZE((1, 10))),
             ),
             ("JMP $4095", 0x4FFF, None),
             ("STP", 0x7000, None),

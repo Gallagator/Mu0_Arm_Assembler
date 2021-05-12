@@ -1,10 +1,6 @@
 /* File for parsing. Check ../../bnf.txt for more information */
 
-use combine::{
-    attempt, between, choice, from_str, many, many1, optional,
-    parser::char::{alpha_num, digit, letter, spaces},
-    satisfy, skip_count, skip_many, token, tokens, ParseError, Parser, Stream,
-};
+use combine::{ParseError, Parser, Stream, attempt, between, choice, from_str, many, many1, optional, parser::char::{alpha_num, digit, letter, spaces}, position, satisfy, skip_count, skip_many, stream::position::SourcePosition, token, tokens};
 
 use std::str::Chars;
 
@@ -112,29 +108,29 @@ where
 
 fn jumpable<Input>() -> impl Parser<Input, Output = Jumpable>
 where
-    Input: Stream<Token = char>,
+    Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
-    let int_lit_parser = int_lit().map(|num| Jumpable::Absolute(num as u16, (0, 0)));
-    let label_parser = label().map(|lab| Jumpable::Label(lab, (0, 0)));
+    let int_lit_parser = (int_lit(), position()).map(|(num, SourcePosition { line: l, column: c })| Jumpable::Absolute(num as u16, (l, c)));
+    let label_parser = (label(), position()).map(|(lab, SourcePosition { line: l, column: c })| Jumpable::Label(lab, (l, c)));
     choice((int_lit_parser, label_parser))
 }
 
 fn op2<Input>() -> impl Parser<Input, Output = Op2>
 where
-    Input: Stream<Token = char>,
+    Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
     let immediate_parser =
-        (int_lit(), space_tag("ROR"), int_lit()).map(|(k, _, b)| Op2::Immediate(k, b, (0, 0)));
-    let shifted_reg_parser = (reg::<Input>(), shift(), int_lit())
-        .map(|(reg, shift, num)| Op2::ShifedReg(reg, shift, num, (0, 0)));
+        (int_lit(), space_tag("ROR"), int_lit(), position()).map(|(k, _, b, SourcePosition { line: l, column: c })| Op2::Immediate(k, b, (l, c)));
+    let shifted_reg_parser = (reg::<Input>(), shift(), int_lit(), position())
+        .map(|(reg, shift, num, SourcePosition { line: l, column: c })| Op2::ShifedReg(reg, shift, num, (l, c)));
     choice((immediate_parser, shifted_reg_parser))
 }
 
 pub fn index<Input>() -> impl Parser<Input, Output = AsmIndex>
 where
-    Input: Stream<Token = char>,
+    Input: Stream<Token = char, Position = SourcePosition >,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
     /* looks for a reg inside [] optionally with an int lit inside*/
@@ -148,24 +144,26 @@ where
             ),
         ),
         optional(space_token('!')),
+        position()
     )
-        .map(|((reg, offs), is_write_back)| {
+        .map(|((reg, offs), is_write_back, SourcePosition { line: l, column: c })| {
             let itype = is_write_back.map_or(IndexType::PRE, |_| IndexType::PREWRITE);
-            (reg, offs.unwrap_or(0), itype, (0, 0))
+            (reg, offs.unwrap_or(0), itype, (l, c))
         });
     /* Am very disapointed that I couldn't include the
      * '['〈reg〉']' ','〈int_lit〉rule in the above parser ;'(*/
     let post_write = (
         between(space_token::<Input>('['), space_token::<Input>(']'), reg()),
         (skip_count(1, space_token(',')), int_lit()).map(|(_, n)| n),
+        position()
     )
-        .map(|(reg, offs)| (reg, offs, IndexType::POSTWRITE, (0, 0)));
+        .map(|(reg, offs, SourcePosition { line: l, column: c })| (reg, offs, IndexType::POSTWRITE, (l, c)));
     choice((attempt(post_write), pre_write))
 }
 
 pub fn instr<Input>() -> impl Parser<Input, Output = Instruction>
 where
-    Input: Stream<Token = char>,
+    Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
     let jmp = (space_tag("JMP"), jumpable()).map(|instr| Instruction::JMP(instr.1));
@@ -271,14 +269,14 @@ where
 
 pub fn program<Input>() -> impl Parser<Input, Output = Ast>
 where
-    Input: Stream<Token = char>,
+    Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
     let statement = (
         spaces::<Input>(),
         choice((
             instr().map(|instr| Statement::Instruction(instr)),
-            label().map(|lab| Statement::Label(lab, (0, 0))),
+            (label(), position()).map(|(lab, SourcePosition { line: l, column: c })| Statement::Label(lab, (l, c))),
         )),
     ).map(|(_, stat)| stat);
     (many::<Vec<_>, _, _>(attempt(statement)), spaces::<Input>()).map(|(stats, _)| Ast { statements: stats })
@@ -468,7 +466,7 @@ mod tests {
         let _ = op2()
             .easy_parse(position::Stream::new("R0               ROR   $123"))
             .map(|(op, _)| {
-                assert_eq!(Op2::ShifedReg(Reg::R0, Shift::ROR, 123, (0, 0)), op);
+                assert_eq!(Op2::ShifedReg(Reg::R0, Shift::ROR, 123, (1, 28)), op);
             })
             .map_err(|_| assert!(false));
         let _ = op2()
@@ -479,34 +477,34 @@ mod tests {
         let _ = op2()
             .easy_parse(position::Stream::new("$123 ROR        $12      "))
             .map(|(op, _)| {
-                assert_eq!(Op2::Immediate(123, 12, (0, 0)), op);
+                assert_eq!(Op2::Immediate(123, 12, (1, 20)), op);
             })
             .map_err(|_| assert!(false));
     }
 
     #[test]
     fn test_index() {
-        match index().easy_parse("[     R2  ]") {
-            Ok((index, _)) => assert_eq!(index, (Reg::R2, 0, IndexType::PRE, (0, 0))),
+        match index().easy_parse(position::Stream::new("[     R2  ]")) {
+            Ok((index, _)) => assert_eq!(index, (Reg::R2, 0, IndexType::PRE, (1, 12))),
             Err(_) => assert!(false),
         }
-        match index().easy_parse("[     R1  ,    $3262   ]") {
-            Ok((index, _)) => assert_eq!(index, (Reg::R1, 3262, IndexType::PRE, (0, 0))),
+        match index().easy_parse(position::Stream::new("[     R1  ,    $3262   ]")) {
+            Ok((index, _)) => assert_eq!(index, (Reg::R1, 3262, IndexType::PRE, (1, 25))),
             Err(_) => assert!(false),
         }
-        match index().easy_parse("[     R3  ,    -$62   ]!") {
-            Ok((index, _)) => assert_eq!(index, (Reg::R3, -62, IndexType::PREWRITE, (0, 0))),
+        match index().easy_parse(position::Stream::new("[     R3  ,    -$62   ]!")) {
+            Ok((index, _)) => assert_eq!(index, (Reg::R3, -62, IndexType::PREWRITE, (1, 25))),
             Err(_) => assert!(false),
         }
-        match index().easy_parse("[     R1             ], $0") {
-            Ok((index, _)) => assert_eq!(index, (Reg::R1, 0, IndexType::POSTWRITE, (0, 0))),
+        match index().easy_parse(position::Stream::new("[     R1             ], $0")) {
+            Ok((index, _)) => assert_eq!(index, (Reg::R1, 0, IndexType::POSTWRITE, (1, 27))),
             Err(_) => assert!(false),
         }
-        match index().easy_parse("[     R1             ], $123") {
-            Ok((index, _)) => assert_eq!(index, (Reg::R1, 123, IndexType::POSTWRITE, (0, 0))),
+        match index().easy_parse(position::Stream::new("[     R1             ], $123")) {
+            Ok((index, _)) => assert_eq!(index, (Reg::R1, 123, IndexType::POSTWRITE, (1, 29))),
             Err(_) => assert!(false),
         }
-        match index().easy_parse("[     R4  ,    $3262   ]") {
+        match index().easy_parse(position::Stream::new("[     R4  ,    $3262   ]")) {
             Ok((_, _)) => assert!(false),
             Err(_) => {}
         }
@@ -514,147 +512,147 @@ mod tests {
 
     #[test]
     fn test_instr() {
-        match instr().easy_parse("JMP $23") {
+        match instr().easy_parse(position::Stream::new("JMP $23")) {
             Ok((Instruction::JMP(jumpable), _)) => {
-                assert_eq!(jumpable, Jumpable::Absolute(23, (0, 0)))
+                assert_eq!(jumpable, Jumpable::Absolute(23, (1, 8)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("JMP .hello_there21 \n") {
+        match instr().easy_parse(position::Stream::new("JMP .hello_there21 \n")) {
             Ok((Instruction::JMP(jumpable), _)) => assert_eq!(
                 jumpable,
-                Jumpable::Label(String::from("hello_there21"), (0, 0))
+                Jumpable::Label(String::from("hello_there21"), (1, 19))
             ),
             _ => assert!(false),
         }
-        match instr().easy_parse("JMP .9hello_there21 \n") {
+        match instr().easy_parse(position::Stream::new("JMP .9hello_there21 \n")) {
             Ok(_) => assert!(false),
             _ => {}
         }
 
-        match instr().easy_parse("JMI $23") {
+        match instr().easy_parse(position::Stream::new("JMI $23")) {
             Ok((Instruction::JMI(jumpable), _)) => {
-                assert_eq!(jumpable, Jumpable::Absolute(23, (0, 0)))
+                assert_eq!(jumpable, Jumpable::Absolute(23, (1, 8)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("JEQ .hello_there21 \n") {
+        match instr().easy_parse(position::Stream::new("JEQ .hello_there21 \n")) {
             Ok((Instruction::JEQ(jumpable), _)) => assert_eq!(
                 jumpable,
-                Jumpable::Label(String::from("hello_there21"), (0, 0))
+                Jumpable::Label(String::from("hello_there21"), (1, 19))
             ),
             _ => assert!(false),
         }
-        match instr().easy_parse("STP \n") {
+        match instr().easy_parse(position::Stream::new("STP \n")) {
             Ok((Instruction::STP, _)) => {}
             _ => assert!(false),
         }
 
-        match instr().easy_parse("ADD R3, R1 ASR $12") {
+        match instr().easy_parse(position::Stream::new("ADD R3, R1 ASR $12")) {
             Ok((Instruction::ADD(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (0, 0)))
+                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (1, 19)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("ADD R3, $13 ROR $24") {
+        match instr().easy_parse(position::Stream::new("ADD R3, $13 ROR $24")) {
             Ok((Instruction::ADD(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::Immediate(13, 24, (0, 0)))
+                assert_eq!(op, Op2::Immediate(13, 24, (1, 20)))
             }
             _ => assert!(false),
         }
 
-        match instr().easy_parse("SUB R3, R1 ASR $12") {
+        match instr().easy_parse(position::Stream::new("SUB R3, R1 ASR $12")) {
             Ok((Instruction::SUB(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (0, 0)))
+                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (1, 19)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("SUB R3, $13 ROR $24") {
+        match instr().easy_parse(position::Stream::new("SUB R3, $13 ROR $24")) {
             Ok((Instruction::SUB(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::Immediate(13, 24, (0, 0)))
+                assert_eq!(op, Op2::Immediate(13, 24, (1, 20)))
             }
             _ => assert!(false),
         }
 
-        match instr().easy_parse("ADC R3, R1 ASR $12") {
+        match instr().easy_parse(position::Stream::new("ADC R3, R1 ASR $12")) {
             Ok((Instruction::ADC(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (0, 0)))
+                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (1, 19)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("ADC R3, $13 ROR $24") {
+        match instr().easy_parse(position::Stream::new("ADC R3, $13 ROR $24")) {
             Ok((Instruction::ADC(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::Immediate(13, 24, (0, 0)))
+                assert_eq!(op, Op2::Immediate(13, 24, (1, 20)))
             }
             _ => assert!(false),
         }
 
-        match instr().easy_parse("SBC R3, R1 ASR $12") {
+        match instr().easy_parse(position::Stream::new("SBC R3, R1 ASR $12")) {
             Ok((Instruction::SBC(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (0, 0)))
+                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (1, 19)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("MOV R3, $13 ROR $24") {
+        match instr().easy_parse(position::Stream::new("MOV R3, $13 ROR $24")) {
             Ok((Instruction::MOV(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::Immediate(13, 24, (0, 0)))
+                assert_eq!(op, Op2::Immediate(13, 24, (1, 20)))
             }
             _ => assert!(false),
         }
 
-        match instr().easy_parse("CMP R3, R1 ASR $12") {
+        match instr().easy_parse(position::Stream::new("CMP R3, R1 ASR $12")) {
             Ok((Instruction::CMP(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (0, 0)))
+                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (1, 19)))
             }
             _ => assert!(false),
         }
-        match instr().easy_parse("AND R3, $13 ROR $24") {
+        match instr().easy_parse(position::Stream::new("AND R3, $13 ROR $24")) {
             Ok((Instruction::AND(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::Immediate(13, 24, (0, 0)))
+                assert_eq!(op, Op2::Immediate(13, 24, (1, 20)))
             }
             _ => assert!(false),
         }
 
-        match instr().easy_parse("TST R3, R1 ASR $12") {
+        match instr().easy_parse(position::Stream::new("TST R3, R1 ASR $12")) {
             Ok((Instruction::TST(Reg::R3, op), _)) => {
-                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (0, 0)))
+                assert_eq!(op, Op2::ShifedReg(Reg::R1, Shift::ASR, 12, (1, 19)))
             }
             _ => assert!(false),
         }
 
-        match instr().easy_parse("LDR R1  , [R2]") {
+        match instr().easy_parse(position::Stream::new("LDR R1  , [R2]")) {
             Ok((Instruction::LDR(Reg::R1, (Reg::R2, 0, IndexType::PRE, _)), _)) => {}
             _ => assert!(false),
         }
 
-        match instr().easy_parse("LDR R2  , [R0, $1245]") {
+        match instr().easy_parse(position::Stream::new("LDR R2  , [R0, $1245]")) {
             Ok((Instruction::LDR(Reg::R2, (Reg::R0, 1245, IndexType::PRE, _)), _)) => {}
             _ => assert!(false),
         }
-        match instr().easy_parse("LDR R1 , [R3, $9378]!") {
+        match instr().easy_parse(position::Stream::new("LDR R1 , [R3, $9378]!")) {
             Ok((Instruction::LDR(Reg::R1, (Reg::R3, 9378, IndexType::PREWRITE, _)), _)) => {}
             _ => assert!(false),
         }
 
-        match instr().easy_parse("LDR R0 , [R2], $1234") {
+        match instr().easy_parse(position::Stream::new("LDR R0 , [R2], $1234")) {
             Ok((Instruction::LDR(Reg::R0, (Reg::R2, 1234, IndexType::POSTWRITE, _)), _)) => {}
             _ => assert!(false),
         }
-        match instr().easy_parse("STR R1  , [R2]") {
+        match instr().easy_parse(position::Stream::new("STR R1  , [R2]")) {
             Ok((Instruction::STR(Reg::R1, (Reg::R2, 0, IndexType::PRE, _)), _)) => {}
             _ => assert!(false),
         }
 
-        match instr().easy_parse("STR R2  , [R0, $1245]") {
+        match instr().easy_parse(position::Stream::new("STR R2  , [R0, $1245]")) {
             Ok((Instruction::STR(Reg::R2, (Reg::R0, 1245, IndexType::PRE, _)), _)) => {}
             _ => assert!(false),
         }
-        match instr().easy_parse("STR R2 , [R3, $9378]!") {
+        match instr().easy_parse(position::Stream::new("STR R2 , [R3, $9378]!")) {
             Ok((Instruction::STR(Reg::R2, (Reg::R3, 9378, IndexType::PREWRITE, _)), _)) => {}
             _ => assert!(false),
         }
 
-        match instr().easy_parse("STR R0 , [R2], $10234") {
+        match instr().easy_parse(position::Stream::new("STR R0 , [R2], $10234")) {
             Ok((Instruction::STR(Reg::R0, (Reg::R2, 10234, IndexType::POSTWRITE, _)), _)) => {}
             _ => assert!(false),
         }

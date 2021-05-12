@@ -3,7 +3,7 @@ pub struct Ast {
     pub statements: Vec<Statement>,
 }
 
-pub type Position = (u32, u32); /* Line followed by col */
+pub type Position = (i32, i32); /* Line followed by col */
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {
