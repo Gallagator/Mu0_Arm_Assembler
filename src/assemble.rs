@@ -13,9 +13,9 @@ const S_BIT: u16 = 0b1 << 8;
 const C_BIT: u16 = 0b1 << 9;
 
 const MAX_JMP: u16 = (0b1 << 12) - 1;
-const MAX_K  : i16 = (0b1 << 5)  - 1;
+const MAX_K: i16 = (0b1 << 5) - 1;
 const MAX_ROT: i16 = 15;
-const MAX_BY : i16 = (0b1 << 4) - 1;
+const MAX_BY: i16 = (0b1 << 4) - 1;
 const MAX_OFFS: i16 = (0b1 << 4) - 1;
 
 pub struct Encode {
@@ -138,33 +138,33 @@ impl Encode {
                 encoding.jumps(jumpable, label_map)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::JMI(jumpable) => {
                 encoding.jumps(jumpable, label_map)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::JEQ(jumpable) => {
                 encoding.jumps(jumpable, label_map)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
-            Instruction::STP   => {
+            }
+            Instruction::STP => {
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::ADD(reg, op2) => {
                 encoding.set_s();
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::SUB(reg, op2) => {
                 encoding.set_s();
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::ADC(reg, op2) => {
                 encoding.set_s();
                 encoding.dprs(reg.clone(), op2)?;
@@ -176,36 +176,36 @@ impl Encode {
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::MOV(reg, op2) => {
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::CMP(reg, op2) => {
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::AND(reg, op2) => {
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::TST(reg, op2) => {
                 encoding.dprs(reg.clone(), op2)?;
                 encoding.set_op(&instr);
                 Ok(encoding.val)
-            },
+            }
             Instruction::LDR(regd, asm_index) => {
                 encoding.set_l();
                 encoding.mems(regd.clone(), asm_index)?;
                 Ok(encoding.val)
-            },
+            }
             Instruction::STR(regd, asm_index) => {
                 encoding.mems(regd.clone(), asm_index)?;
                 Ok(encoding.val)
-            },
+            }
         }
     }
 
@@ -235,8 +235,7 @@ impl Encode {
             Ok(())
         }
     }
-    fn dprs(&mut self, reg: Reg, op: &Op2) 
-        -> Result<(), SemanticError> {
+    fn dprs(&mut self, reg: Reg, op: &Op2) -> Result<(), SemanticError> {
         self.set_dpr();
         self.set_d(reg.clone());
         match op {
@@ -246,55 +245,51 @@ impl Encode {
                 let pos = pos.clone();
                 if k > MAX_K || k < 0 || r > MAX_ROT || r < 0 {
                     Err(SemanticError::IMMEDIATEOVERSIZE(pos))
-                }
-                else if r % 2 == 1 {
+                } else if r % 2 == 1 {
                     Err(SemanticError::ODDROR(pos))
-                }
-                else {
+                } else {
                     self.set_c();
                     self.set_k(k as u16);
                     self.set_rot((r as u16) / 2);
                     Ok(())
                 }
-            },
+            }
             Op2::ShifedReg(regm, shift, by, pos) => {
                 let by = by.clone();
                 if by > MAX_BY || by < 0 {
                     Err(SemanticError::IMMEDIATEOVERSIZE(pos.clone()))
-                }
-                else {
+                } else {
                     self.set_m(regm.clone());
                     self.set_shift(shift.clone());
                     self.set_b(by as u16);
                     Ok(())
                 }
-            },
+            }
         }
     }
     fn mems(&mut self, regd: Reg, asm_index: &AsmIndex) -> Result<(), SemanticError> {
         let (regm, mut offs, index_type, pos) = asm_index.clone();
         self.set_d(regd);
-        if offs >= 0 { 
+        if offs >= 0 {
             self.set_u();
-        }
-        else {
+        } else {
             offs = -offs;
         }
 
         if offs > MAX_OFFS {
             Err(SemanticError::IMMEDIATEOVERSIZE(pos.clone()))
-        } 
-        else {
+        } else {
             self.set_m(regm);
             self.set_n(offs as u16);
             match index_type {
                 IndexType::PRE => self.set_p(),
-                IndexType::PREWRITE => { self.set_p(); self.set_w()},
-                IndexType::POSTWRITE => { self.set_w() },
+                IndexType::PREWRITE => {
+                    self.set_p();
+                    self.set_w()
+                }
+                IndexType::POSTWRITE => self.set_w(),
             }
             Ok(())
         }
-        
-
     }
 }
