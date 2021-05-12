@@ -8,8 +8,8 @@ use std::{
 use combine::stream::position;
 use combine::EasyParser;
 
-use super::parse::ast::*;
-use super::parse::parse;
+use super::ast::*;
+use super::parse;
 
 const LSL: u16 = 0b00 << 2;
 const LSR: u16 = 0b01 << 2;

@@ -1,5 +1,5 @@
 [package]
-name = "Mu0_Arm_Assembler"
+name = "mu0_arm_assembler"
 version = "0.1.0"
 authors = ["ldg"]
 edition = "2018"

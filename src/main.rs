@@ -1,7 +1,8 @@
-mod assemble;
-mod parse;
+mod assembler;
 
 use std::env;
+
+use assembler::assemble;
 
 fn main() {
     let args: Vec<_> = env::args().collect(); 
