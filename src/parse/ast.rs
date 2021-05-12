@@ -45,14 +45,14 @@ pub enum Op2 {
     ShifedReg(Reg, Shift, i16, Position),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum IndexType {
     PRE,
     PREWRITE,
     POSTWRITE,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Reg {
     R0,
     R1,
@@ -60,7 +60,7 @@ pub enum Reg {
     R3,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Shift {
     LSL,
     LSR,
