@@ -1,6 +1,9 @@
 mod assemble;
 mod parse;
 
+use std::env;
+
 fn main() {
-    assemble::assemble_to_file("test.s");
+    let args: Vec<_> = env::args().collect(); 
+    assemble::assemble_to_file(&args[1].to_owned()[..], &args[2][..]);
 }

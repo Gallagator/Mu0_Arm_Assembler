@@ -346,7 +346,7 @@ fn assemble(Ast { statements: stats }: &Ast) -> Vec<Result<u16, SemanticError>> 
     assembled
 }
 
-pub fn assemble_to_file(input_filename: &str) {
+pub fn assemble_to_file(input_filename: &str, output: &str) {
     /* Read assembly file */
     let mut file =
         File::open(input_filename).expect(&format!("{} file doesn't exist.", input_filename)[..]);
@@ -366,7 +366,7 @@ pub fn assemble_to_file(input_filename: &str) {
     }
     /* Assemble the file */
     let instrs = assemble(&ast);
-    let mut out = File::create("out.txt").expect("I couldn't create out.txt. Maybe you should?");
+    let mut out = File::create(output).expect("I couldn't create out.txt. Maybe you should?");
     for instr in instrs.iter() {
         match instr {
             Ok(encoding) => {
