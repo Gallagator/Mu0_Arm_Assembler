@@ -22,8 +22,13 @@ To build, navigate to the project directory any type:
 The executable will be in /target/release
 
 RUN:
-"./mu0_arm_assembler test.s out.txt"
-
+Linux: "./mu0_arm_assembler test.s out.txt"
+Windows:
+1)
+  Open the CMD
+  Navigate to the directory that the executable is in using "cd [directory]"
+  type: "start ./mu0_arm_assembler test.s out.txt"
+  
 where test.s is the assembly file and out.txt is the destination file for
 the assembly output.
 
