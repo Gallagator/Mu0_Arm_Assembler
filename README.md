@@ -29,12 +29,23 @@ You must have the rust programming language installed to use cargo.
 The executable will be in /target/release
 
 RUN:
-Linux: "./mu0_arm_assembler test.s out.txt"
+
+Linux: 
+
+navigate to the directory that the executable is installed with "cd [directory]"
+
+run: "./mu0_arm_assembler test.s out.txt"
+
+where test.s is the assembly file and out.txt is the destination file for
+the assembly output.
 
 Windows:
-1 (reccomended)
+
+1 (recomended)
   Install a linux subsystem. I reccomend the ubuntu one from the microsoft store.
-  I reccomend you use this guide.
+  I suggest you use this guide: https://itsfoss.com/install-bash-on-windows/
+  Follow the linus guide.
+  
 2
   Alternatively Open the CMD
   Navigate to the directory that the executable is in using "cd [directory]"
@@ -42,6 +53,4 @@ Windows:
   Unfortunately using the CMD doesn't allow error messages to be printed.
  
   
-where test.s is the assembly file and out.txt is the destination file for
-the assembly output.
 
