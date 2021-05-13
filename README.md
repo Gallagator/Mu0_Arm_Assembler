@@ -21,8 +21,10 @@ This is a for loop from 1 to 10 in the assembly language.
 
 BUILD:
 
-To build, navigate to the project directory any type:
-"cargo build --release"
+To build, navigate to the project directory and type:
+"cargo build --release" 
+
+You must have the rust programming language installed to use cargo.
 
 The executable will be in /target/release
 
