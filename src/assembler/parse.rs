@@ -1,12 +1,6 @@
 /* File for parsing. Check ../../bnf.txt for more information */
 
-use combine::{
-    attempt, between, choice, from_str, many, many1, optional,
-    parser::char::{alpha_num, digit, letter, spaces},
-    position, satisfy, skip_count, skip_many,
-    stream::position::SourcePosition,
-    token, tokens, ParseError, Parser, Stream,
-};
+use combine::{ParseError, Parser, Stream, attempt, between, choice, eof, from_str, many, many1, optional, parser::char::{alpha_num, digit, letter, spaces}, position, satisfy, skip_count, skip_many, stream::position::SourcePosition, token, tokens};
 
 use std::str::Chars;
 
@@ -294,10 +288,11 @@ where
             (label(), position())
                 .map(|(lab, SourcePosition { line: l, column: c })| Statement::Label(lab, (l, c))),
         )),
+        spaces::<Input>(),
     )
-        .map(|(_, stat)| stat);
-    (many::<Vec<_>, _, _>(attempt(statement)), spaces::<Input>())
-        .map(|(stats, _)| Ast { statements: stats })
+        .map(|(_, stat, _)| stat);
+    (many::<Vec<_>, _, _>(statement))
+        .map(|stats| Ast { statements: stats })
 }
 
 #[cfg(test)]
