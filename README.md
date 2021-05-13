@@ -32,11 +32,15 @@ RUN:
 Linux: "./mu0_arm_assembler test.s out.txt"
 
 Windows:
-
-1)
-  Open the CMD
+1 (reccomended)
+  Install a linux subsystem. I reccomend the ubuntu one from the microsoft store.
+  I reccomend you use this guide.
+2
+  Alternatively Open the CMD
   Navigate to the directory that the executable is in using "cd [directory]"
   type: "start mu0_arm_assembler test.s out.txt"
+  Unfortunately using the CMD doesn't allow error messages to be printed.
+ 
   
 where test.s is the assembly file and out.txt is the destination file for
 the assembly output.
