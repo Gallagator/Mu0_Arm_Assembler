@@ -1,6 +1,12 @@
 /* File for parsing. Check ../../bnf.txt for more information */
 
-use combine::{ParseError, Parser, Stream, attempt, between, choice, from_str, many, many1, optional, parser::char::{alpha_num, digit, letter, spaces}, position, satisfy, skip_count, skip_many, stream::position::SourcePosition, token, tokens};
+use combine::{
+    attempt, between, choice, from_str, many, many1, optional,
+    parser::char::{alpha_num, digit, letter, spaces},
+    position, satisfy, skip_count, skip_many,
+    stream::position::SourcePosition,
+    token, tokens, ParseError, Parser, Stream,
+};
 
 use std::str::Chars;
 
@@ -111,8 +117,10 @@ where
     Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
-    let int_lit_parser = (int_lit(), position()).map(|(num, SourcePosition { line: l, column: c })| Jumpable::Absolute(num as u16, (l, c)));
-    let label_parser = (label(), position()).map(|(lab, SourcePosition { line: l, column: c })| Jumpable::Label(lab, (l, c)));
+    let int_lit_parser = (int_lit(), position())
+        .map(|(num, SourcePosition { line: l, column: c })| Jumpable::Absolute(num as u16, (l, c)));
+    let label_parser = (label(), position())
+        .map(|(lab, SourcePosition { line: l, column: c })| Jumpable::Label(lab, (l, c)));
     choice((int_lit_parser, label_parser))
 }
 
@@ -121,16 +129,19 @@ where
     Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
-    let immediate_parser =
-        (int_lit(), space_tag("ROR"), int_lit(), position()).map(|(k, _, b, SourcePosition { line: l, column: c })| Op2::Immediate(k, b, (l, c)));
-    let shifted_reg_parser = (reg::<Input>(), shift(), int_lit(), position())
-        .map(|(reg, shift, num, SourcePosition { line: l, column: c })| Op2::ShifedReg(reg, shift, num, (l, c)));
+    let immediate_parser = (int_lit(), space_tag("ROR"), int_lit(), position())
+        .map(|(k, _, b, SourcePosition { line: l, column: c })| Op2::Immediate(k, b, (l, c)));
+    let shifted_reg_parser = (reg::<Input>(), shift(), int_lit(), position()).map(
+        |(reg, shift, num, SourcePosition { line: l, column: c })| {
+            Op2::ShifedReg(reg, shift, num, (l, c))
+        },
+    );
     choice((immediate_parser, shifted_reg_parser))
 }
 
 pub fn index<Input>() -> impl Parser<Input, Output = AsmIndex>
 where
-    Input: Stream<Token = char, Position = SourcePosition >,
+    Input: Stream<Token = char, Position = SourcePosition>,
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
     /* looks for a reg inside [] optionally with an int lit inside*/
@@ -144,20 +155,24 @@ where
             ),
         ),
         optional(space_token('!')),
-        position()
+        position(),
     )
-        .map(|((reg, offs), is_write_back, SourcePosition { line: l, column: c })| {
-            let itype = is_write_back.map_or(IndexType::PRE, |_| IndexType::PREWRITE);
-            (reg, offs.unwrap_or(0), itype, (l, c))
-        });
+        .map(
+            |((reg, offs), is_write_back, SourcePosition { line: l, column: c })| {
+                let itype = is_write_back.map_or(IndexType::PRE, |_| IndexType::PREWRITE);
+                (reg, offs.unwrap_or(0), itype, (l, c))
+            },
+        );
     /* Am very disapointed that I couldn't include the
      * '['〈reg〉']' ','〈int_lit〉rule in the above parser ;'(*/
     let post_write = (
         between(space_token::<Input>('['), space_token::<Input>(']'), reg()),
         (skip_count(1, space_token(',')), int_lit()).map(|(_, n)| n),
-        position()
+        position(),
     )
-        .map(|(reg, offs, SourcePosition { line: l, column: c })| (reg, offs, IndexType::POSTWRITE, (l, c)));
+        .map(|(reg, offs, SourcePosition { line: l, column: c })| {
+            (reg, offs, IndexType::POSTWRITE, (l, c))
+        });
     choice((attempt(post_write), pre_write))
 }
 
@@ -276,10 +291,13 @@ where
         spaces::<Input>(),
         choice((
             instr().map(|instr| Statement::Instruction(instr)),
-            (label(), position()).map(|(lab, SourcePosition { line: l, column: c })| Statement::Label(lab, (l, c))),
+            (label(), position())
+                .map(|(lab, SourcePosition { line: l, column: c })| Statement::Label(lab, (l, c))),
         )),
-    ).map(|(_, stat)| stat);
-    (many::<Vec<_>, _, _>(attempt(statement)), spaces::<Input>()).map(|(stats, _)| Ast { statements: stats })
+    )
+        .map(|(_, stat)| stat);
+    (many::<Vec<_>, _, _>(attempt(statement)), spaces::<Input>())
+        .map(|(stats, _)| Ast { statements: stats })
 }
 
 #[cfg(test)]

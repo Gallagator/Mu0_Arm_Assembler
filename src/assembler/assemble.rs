@@ -43,13 +43,22 @@ impl fmt::Display for SemanticError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let pos;
         let msg = match self {
-            SemanticError::ODDROR(p) => { pos = p; "Immediate ROR'd by an even value." },
-            SemanticError::UNDEFINEDLABEL(p) => { pos = p; "Jump to undefined label." },
+            SemanticError::ODDROR(p) => {
+                pos = p;
+                "Immediate ROR'd by an even value."
+            }
+            SemanticError::UNDEFINEDLABEL(p) => {
+                pos = p;
+                "Jump to undefined label."
+            }
             SemanticError::IMMEDIATEOVERSIZE(p) => {
                 pos = p;
                 "You have used an immediate value too large for the instruction"
             }
-            SemanticError::REDEFINEDLABEL(p) => { pos = p; "Label already defined" } ,
+            SemanticError::REDEFINEDLABEL(p) => {
+                pos = p;
+                "Label already defined"
+            }
         };
         write!(f, "Semantic error: {}\nLine: {}\nCol:{}", msg, pos.0, pos.1)
     }
