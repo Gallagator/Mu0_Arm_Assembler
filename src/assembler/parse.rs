@@ -1,6 +1,6 @@
 /* File for parsing. Check ../../bnf.txt for more information */
 
-use combine::{ParseError, Parser, Stream, attempt, between, choice, eof, from_str, many, many1, optional, parser::char::{alpha_num, digit, letter, spaces}, position, satisfy, skip_count, skip_many, stream::position::SourcePosition, token, tokens};
+use combine::{ParseError, Parser, Stream, attempt, between, choice, from_str, many, many1, optional, parser::char::{alpha_num, digit, letter, spaces}, position, satisfy, skip_count, skip_many, stream::position::SourcePosition, token, tokens};
 
 use std::str::Chars;
 
