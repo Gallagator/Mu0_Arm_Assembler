@@ -18,6 +18,7 @@ JMI .loop
 
 This is a for loop from 1 to 10 in the assembly language.
 
+----------------------------------------------------------------------------
 
 BUILD:
 
@@ -27,6 +28,8 @@ To build, navigate to the project directory and type:
 You must have the rust programming language installed to use cargo.
 
 The executable will be in /target/release
+
+---------------------------------------------------------------------------------
 
 RUN:
 
@@ -39,12 +42,13 @@ run: "./mu0_arm_assembler test.s out.txt"
 where test.s is the assembly file and out.txt is the destination file for
 the assembly output.
 
+-------------------------------------------------------------------------------------
 Windows:
 
 1 (recomended)
   Install a linux subsystem. I reccomend the ubuntu one from the microsoft store.
   I suggest you use this guide: https://itsfoss.com/install-bash-on-windows/
-  Follow the linus guide.
+  Follow the linux guide above.
   
 2
   Alternatively Open the CMD
@@ -52,5 +56,5 @@ Windows:
   type: "start mu0_arm_assembler test.s out.txt"
   Unfortunately using the CMD doesn't allow error messages to be printed.
  
-  
+ 
 
