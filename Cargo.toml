@@ -9,3 +9,10 @@ edition = "2018"
 [dependencies]
 
 combine = "4.5.2"
+
+[toolchain.optional]
+rust-std = ["x86_64-pc-windows-gnu"]
+
+[target.x86_64-pc-windows-gnu]
+linker = "/usr/bin/x86_64-w64-mingw32-gcc"
+

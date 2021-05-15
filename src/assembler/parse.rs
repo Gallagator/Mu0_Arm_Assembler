@@ -55,7 +55,7 @@ where
     let r0_parser = attempt(space_tag("R0").map(|_| Reg::R0));
     let r1_parser = attempt(space_tag("R1").map(|_| Reg::R1));
     let r2_parser = attempt(space_tag("R2").map(|_| Reg::R2));
-    let r3_parser = attempt(space_tag("R3").map(|_| Reg::R3));
+    let r3_parser = space_tag("R3").map(|_| Reg::R3);
     choice((r0_parser, r1_parser, r2_parser, r3_parser))
 }
 
@@ -67,7 +67,7 @@ where
     let lsl_parser = attempt(space_tag("LSL").map(|_| Shift::LSL));
     let lsr_parser = attempt(space_tag("LSR").map(|_| Shift::LSR));
     let asr_parser = attempt(space_tag("ASR").map(|_| Shift::ASR));
-    let ror_parser = attempt(space_tag("ROR").map(|_| Shift::ROR));
+    let ror_parser = space_tag("ROR").map(|_| Shift::ROR);
     choice((lsl_parser, lsr_parser, asr_parser, ror_parser))
 }
 
@@ -272,7 +272,7 @@ where
         attempt(and),
         attempt(tst),
         attempt(ldr),
-        attempt(store),
+        store,
     ))
 }
 
