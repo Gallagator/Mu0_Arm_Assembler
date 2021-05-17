@@ -20,7 +20,7 @@ This is a for loop from 1 to 10 in the assembly language.
 
 ----------------------------------------------------------------------
 
-RELEASE: https://github.com/Gallagator/Mu0_Arm_Assembler/releases/tag/1.0.0
+RELEASE: https://github.com/Gallagator/Mu0_Arm_Assembler/releases
 
 ----------------------------------------------------------------------------
 
