@@ -17,6 +17,19 @@ CMP R1, R2 ROR $0
 JMI .loop
 
 This is a for loop from 1 to 10 in the assembly language.
+----------------------------------------------------------------------------
+
+Floating point instructions have been added.
+They take the form of:
+
+ADDF <REG> <REG>
+SUBF <REG> <REG>
+MULF <REG> <REG>
+
+Their encoding is: 0001 RD MUL S XXXXXX RM
+where RD the 2 bits specifying the destination register, MUL is a flag to
+specify that the operation is a multiplication, S specifies that its a subtraction
+X is don't care and RM is the 2 bits specifying other register.
 
 ----------------------------------------------------------------------
 

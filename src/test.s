@@ -1,11 +1,6 @@
 
 
-STR R0, R0], $13
-MOV R2, $10 ROR $0
-
-.loop
-ADD R1 $1 ROR $0
-CMP R1, R2 ROR $0
-JMI .loop
-
+ADDF R0, R1
+SUBF R2, R3
+MULF R3, R2
 

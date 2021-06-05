@@ -29,6 +29,9 @@ pub enum Instruction {
     TST(Reg, Op2),
     LDR(Reg, AsmIndex),
     STR(Reg, AsmIndex),
+    ADDF(Reg, Reg),
+    SUBF(Reg, Reg),
+    MULF(Reg, Reg),
 }
 
 pub type AsmIndex = (Reg, i16, IndexType, Position);

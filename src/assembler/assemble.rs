@@ -241,6 +241,20 @@ impl Encode {
                 encoding.mems(regd.clone(), asm_index)?;
                 Ok(encoding.val)
             }
+            Instruction::ADDF(regd, regm) => {
+                encoding.floats(regd.clone(), regm.clone())?;   
+                Ok(encoding.val)
+            }
+            Instruction::SUBF(regd, regm) => {
+                encoding.floats(regd.clone(), regm.clone())?;   
+                encoding.val |= 1 << 8;
+                Ok(encoding.val)
+            }
+            Instruction::MULF(regd, regm) => {
+                encoding.floats(regd.clone(), regm.clone())?;   
+                encoding.val |= 1 << 9;
+                Ok(encoding.val) 
+            }
         }
     }
 
@@ -326,6 +340,12 @@ impl Encode {
             }
             Ok(())
         }
+    }
+    fn floats(&mut self, regd: Reg, regm: Reg) -> Result<(), SemanticError> {
+        self.set_d(regd);         
+        self.set_m(regm);         
+        self.val |= 1 << 12;
+        Ok(())
     }
 }
 

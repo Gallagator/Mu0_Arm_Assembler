@@ -257,7 +257,27 @@ where
         index(),
     )
         .map(|(_, reg, _, index)| Instruction::STR(reg, index));
-
+    let addf = (
+        space_tag::<Input>("ADDF"),
+        reg::<Input>(),
+        space_token::<Input>(','),     
+        reg::<Input>(),
+    )
+        .map(|(_, reg1, _, reg2)| Instruction::ADDF(reg1, reg2));
+    let subf = (
+        space_tag::<Input>("SUBF"),
+        reg::<Input>(),
+        space_token::<Input>(','),     
+        reg::<Input>(),
+    )
+        .map(|(_, reg1, _, reg2)| Instruction::SUBF(reg1, reg2));
+    let mulf = (
+        space_tag::<Input>("MULF"),
+        reg::<Input>(),
+        space_token::<Input>(','),     
+        reg::<Input>(),
+    )
+        .map(|(_, reg1, _, reg2)| Instruction::MULF(reg1, reg2));
     choice((
         attempt(jmp),
         attempt(jmi),
@@ -272,7 +292,10 @@ where
         attempt(and),
         attempt(tst),
         attempt(ldr),
-        store,
+        attempt(store),
+        attempt(addf),
+        attempt(subf),
+        mulf,
     ))
 }
 
