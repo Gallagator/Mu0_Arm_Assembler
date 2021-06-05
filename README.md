@@ -1,4 +1,4 @@
-A simple assembler written in rust for the simple Mu0-ARM architecture.
+Asimple assembler written in rust for the simple Mu0-ARM architecture.
 
 Line and column numbers are provided for syntax and semantic errors as well
 as helpful(ish) error messages.
@@ -23,7 +23,9 @@ Floating point instructions have been added.
 They take the form of:
 
 ADDF <REG> <REG>
+
 SUBF <REG> <REG>
+
 MULF <REG> <REG>
 
 Their encoding is: 0001 RD MUL S XXXXXX RM
