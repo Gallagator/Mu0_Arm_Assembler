@@ -33,7 +33,7 @@ X is don't care and RM is the 2 bits specifying other register.
 
 ----------------------------------------------------------------------
 
-RELEASE: https://github.com/Gallagator/Mu0_Arm_Assembler/releases/tag/1.0.0
+RELEASE: https://github.com/Gallagator/Mu0_Arm_Assembler/releases
 
 ----------------------------------------------------------------------------
 
