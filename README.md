@@ -22,11 +22,11 @@ This is a for loop from 1 to 10 in the assembly language.
 Floating point instructions have been added.
 They take the form of:
 
-ADDF <REG> <REG>
+ADDF 〈REG〉 〈REG〉
 
-SUBF <REG> <REG>
+SUBF 〈REG〉 〈REG〉
 
-MULF <REG> <REG>
+MULF 〈REG〉 〈REG〉
 
 Their encoding is: 0001 RD MUL S XXXXXX RM
 where RD the 2 bits specifying the destination register, MUL is a flag to
